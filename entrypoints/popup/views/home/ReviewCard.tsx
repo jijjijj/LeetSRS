@@ -1,5 +1,5 @@
 import { FaArrowUpRightFromSquare } from 'react-icons/fa6';
-import { Difficulty, type Card } from '@/shared/cards';
+import { Difficulty, getCardUrl, type Card } from '@/shared/cards';
 import { Rating } from 'ts-fsrs';
 import type { Grade } from 'ts-fsrs';
 import { Button } from 'react-aria-components';
@@ -7,7 +7,7 @@ import { bounceButton } from '@/shared/styles';
 import { useI18n } from '../../contexts/I18nContext';
 
 type ReviewCardProps = {
-  card: Pick<Card, 'slug' | 'leetcodeId' | 'name' | 'difficulty' | 'domain'>;
+  card: Pick<Card, 'slug' | 'leetcodeId' | 'name' | 'difficulty' | 'domain' | 'url'>;
   onRate: (rating: Grade) => void;
   isProcessing?: boolean;
 };
@@ -42,17 +42,17 @@ export function ReviewCard({ card, onRate, isProcessing = false }: ReviewCardPro
   return (
     <div className="border border-current rounded-lg bg-secondary p-4 flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-semibold text-secondary">#{card.leetcodeId}</span>
+        {card.leetcodeId ? <span className="text-sm font-semibold text-secondary">#{card.leetcodeId}</span> : <span />}
         <span className={`text-xs px-2 py-1 rounded text-white ${difficultyColor}`}>{card.difficulty}</span>
       </div>
 
       <div className="flex justify-center pb-3 -mt-1 text-center">
         <a
-          href={`https://${card.domain}/problems/${card.slug}/description/`}
+          href={getCardUrl(card)}
           target="_blank"
           rel="noopener noreferrer"
           className="text-lg font-semibold text-primary group"
-          aria-label="LeetCode problem"
+          aria-label={card.name}
         >
           {card.name}
           <FaArrowUpRightFromSquare className="inline ml-1.5 text-xs opacity-60 group-hover:opacity-100 transition-opacity" />

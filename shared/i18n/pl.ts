@@ -72,6 +72,7 @@ const pl: Translations = {
     noCardsToReview: 'Brak kart do powtórki!',
     addProblemsInstructions: 'Dodawaj zadania na LeetCode za pomocą',
     addProblemsButton: "przycisku obok 'Submit'.",
+    addProblemsAlt: 'Możesz też dodawać zadania na neetcode.io lub dodać dowolne zadanie po URL w zakładce Karty.',
     leetcodeCnBanner: {
       message: 'Używasz leetcode.cn? Włącz obsługę, aby dodawać zadania.',
       enable: 'Włącz',
@@ -112,6 +113,20 @@ const pl: Translations = {
     noCardsAdded: 'Nie dodano jeszcze żadnych kart.',
     noCardsMatchFilter: 'Żadne karty nie pasują do filtra.',
     cardPausedTitle: 'Karta jest wstrzymana',
+    addCard: {
+      buttonAriaLabel: 'Dodaj zadanie po URL',
+      title: 'Dodaj zadanie po URL',
+      urlLabel: 'URL zadania',
+      urlPlaceholder: 'https://example.com/problems/two-sum',
+      nameLabel: 'Nazwa',
+      namePlaceholder: 'Two Sum',
+      difficultyLabel: 'Trudność',
+      submit: 'Dodaj',
+      cancel: 'Anuluj',
+      invalidUrl: 'Podaj prawidłowy adres http(s).',
+      nameRequired: 'Podaj nazwę.',
+      alreadyExists: 'To zadanie jest już w Twoich kartach.',
+    },
   },
 
   // Card stats labels
@@ -173,6 +188,12 @@ const pl: Translations = {
     leetcodeCn: {
       title: 'LeetCode Chiny',
       description: 'Włącz obsługę leetcode.cn (力扣). Wymaga dodatkowego uprawnienia przeglądarki.',
+      enable: 'Włącz',
+    },
+
+    neetcode: {
+      title: 'NeetCode',
+      description: 'Włącz obsługę neetcode.io. Wymaga dodatkowego uprawnienia przeglądarki.',
       enable: 'Włącz',
     },
 

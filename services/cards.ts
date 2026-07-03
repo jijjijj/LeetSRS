@@ -10,7 +10,7 @@ import { STORAGE_KEYS } from './storage-keys';
 import { storage } from '#imports';
 import { updateStats, getTodayStats } from './stats';
 import { deleteNote } from './notes';
-import { type Card, type Difficulty, type LeetcodeDomain } from '@/shared/cards';
+import { type Card, type CardDomain, type Difficulty } from '@/shared/cards';
 import { getMaxNewCardsPerDay, getDayStartHour } from './settings';
 const params = generatorParameters({ maximum_interval: 1000 });
 const fsrs = new FSRS(params);
@@ -72,7 +72,8 @@ function createCard(
   name: string,
   leetcodeId: string,
   difficulty: Difficulty,
-  domain: LeetcodeDomain
+  domain: CardDomain,
+  url?: string
 ): Card {
   return {
     id: crypto.randomUUID(),
@@ -81,6 +82,7 @@ function createCard(
     leetcodeId,
     difficulty,
     domain,
+    ...(url && { url }),
     createdAt: new Date(),
     fsrs: createEmptyCard(),
     paused: false,
@@ -92,14 +94,15 @@ export async function addCard(
   name: string,
   leetcodeId: string,
   difficulty: Difficulty,
-  domain: LeetcodeDomain
+  domain: CardDomain,
+  url?: string
 ): Promise<Card> {
   const cards = await getCards();
   if (slug in cards) {
     return deserializeCard(cards[slug]);
   }
 
-  const card = createCard(slug, name, leetcodeId, difficulty, domain);
+  const card = createCard(slug, name, leetcodeId, difficulty, domain, url);
   cards[slug] = serializeCard(card);
   await storage.setItem(STORAGE_KEYS.cards, cards);
   return card;
@@ -166,7 +169,8 @@ export async function rateCard(
   rating: Grade,
   leetcodeId: string,
   difficulty: Difficulty,
-  domain: LeetcodeDomain
+  domain: CardDomain,
+  url?: string
 ): Promise<{ card: Card; shouldRequeue: boolean }> {
   const cards = await getCards();
 
@@ -176,7 +180,7 @@ export async function rateCard(
     card = deserializeCard(cards[slug]);
     isNewCard = card.fsrs.state === FsrsState.New;
   } else {
-    card = createCard(slug, name, leetcodeId, difficulty, domain);
+    card = createCard(slug, name, leetcodeId, difficulty, domain, url);
   }
 
   const now = new Date();

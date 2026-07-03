@@ -7,6 +7,8 @@ export type RatingCallback = (rating: number, label: string) => void;
 type RatingMenuPosition = 'top' | 'bottom';
 type RatingMenuOptions = {
   position?: RatingMenuPosition;
+  /** Overrides theme detection for host pages that don't use LeetCode's dark-mode classes */
+  isDark?: () => boolean;
 };
 
 export class RatingMenu {
@@ -15,6 +17,7 @@ export class RatingMenu {
   private onRate: RatingCallback;
   private onAddWithoutRating: () => void;
   private position: RatingMenuPosition;
+  private isDark: () => boolean;
 
   constructor(
     container: HTMLElement,
@@ -26,6 +29,7 @@ export class RatingMenu {
     this.onRate = onRate;
     this.onAddWithoutRating = onAddWithoutRating;
     this.position = options?.position ?? 'bottom';
+    this.isDark = options?.isDark ?? isDarkMode;
   }
 
   toggle(): void {
@@ -41,7 +45,7 @@ export class RatingMenu {
 
     const t = getServiceTranslations();
     this.element = document.createElement('div');
-    const isDark = isDarkMode();
+    const isDark = this.isDark();
     const colors = isDark ? THEME_COLORS.dark : THEME_COLORS.light;
 
     const positionStyles =
@@ -74,7 +78,7 @@ export class RatingMenu {
 
     // Create rating buttons
     RATING_BUTTON_CONFIGS.forEach(({ rating, labelKey, colorKey }) => {
-      const { bg, hover } = getRatingColor(colorKey);
+      const { bg, hover } = getRatingColor(colorKey, isDark);
       const label = t.ratings[labelKey];
 
       const button = createButton({
@@ -114,8 +118,10 @@ export class RatingMenu {
     const addButton = this.createAddWithoutRatingButton();
     this.element.appendChild(addButton);
 
-    // Add menu to container
-    this.container.style.position = 'relative';
+    // Add menu to container (keep an existing positioning context, e.g. a fixed container)
+    if (!this.container.style.position) {
+      this.container.style.position = 'relative';
+    }
     this.container.appendChild(this.element);
 
     // Setup close on outside click
@@ -126,7 +132,7 @@ export class RatingMenu {
 
   private createAddWithoutRatingButton(): HTMLButtonElement {
     const t = getServiceTranslations();
-    const isDark = isDarkMode();
+    const isDark = this.isDark();
     const colors = isDark ? THEME_COLORS.dark : THEME_COLORS.light;
     const bgColor = colors.bgAddButton;
     const hoverBgColor = colors.bgAddButtonHover;

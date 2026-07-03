@@ -70,6 +70,7 @@ const en = {
     noCardsToReview: 'No cards to review!',
     addProblemsInstructions: 'Add problems on LeetCode using the',
     addProblemsButton: "button next to 'Submit'.",
+    addProblemsAlt: 'You can also add problems on neetcode.io, or add any problem by URL from the Cards tab.',
     leetcodeCnBanner: {
       message: 'Using leetcode.cn? Enable support to add problems.',
       enable: 'Enable',
@@ -110,6 +111,20 @@ const en = {
     noCardsAdded: 'No cards added yet.',
     noCardsMatchFilter: 'No cards match your filter.',
     cardPausedTitle: 'Card is paused',
+    addCard: {
+      buttonAriaLabel: 'Add problem by URL',
+      title: 'Add problem by URL',
+      urlLabel: 'Problem URL',
+      urlPlaceholder: 'https://example.com/problems/two-sum',
+      nameLabel: 'Name',
+      namePlaceholder: 'Two Sum',
+      difficultyLabel: 'Difficulty',
+      submit: 'Add',
+      cancel: 'Cancel',
+      invalidUrl: 'Enter a valid http(s) URL.',
+      nameRequired: 'Enter a name.',
+      alreadyExists: 'This problem is already in your cards.',
+    },
   },
 
   // Card stats labels
@@ -171,6 +186,12 @@ const en = {
     leetcodeCn: {
       title: 'LeetCode China',
       description: 'Enable support for leetcode.cn (力扣). Requires additional browser permission.',
+      enable: 'Enable',
+    },
+
+    neetcode: {
+      title: 'NeetCode',
+      description: 'Enable support for neetcode.io. Requires additional browser permission.',
       enable: 'Enable',
     },
 

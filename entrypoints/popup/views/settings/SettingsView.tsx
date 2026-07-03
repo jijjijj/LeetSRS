@@ -4,6 +4,7 @@ import { LanguageSection } from './LanguageSection';
 import { AppearanceSection } from './AppearanceSection';
 import { ProblemAutoClearSection } from './ProblemAutoClearSection';
 import { LeetcodeCnSection } from './LeetcodeCnSection';
+import { NeetcodeSection } from './NeetcodeSection';
 import { ReviewSettingsSection } from './ReviewSettingsSection';
 import { GistSyncSection } from './GistSyncSection';
 import { DataSection } from './DataSection';
@@ -20,6 +21,7 @@ export function SettingsView() {
       <GistSyncSection />
       <DataSection />
       <LeetcodeCnSection />
+      <NeetcodeSection />
       <AboutSection />
     </ViewLayout>
   );

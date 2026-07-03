@@ -109,7 +109,7 @@ export default defineBackground(() => {
 
       case MessageType.ADD_CARD: {
         return handleDataUpdate(() =>
-          addCard(request.slug, request.name, request.leetcodeId, request.difficulty, request.domain)
+          addCard(request.slug, request.name, request.leetcodeId, request.difficulty, request.domain, request.url)
         );
       }
 
@@ -130,7 +130,15 @@ export default defineBackground(() => {
 
       case MessageType.RATE_CARD: {
         return handleDataUpdate(() =>
-          rateCard(request.slug, request.name, request.rating, request.leetcodeId, request.difficulty, request.domain)
+          rateCard(
+            request.slug,
+            request.name,
+            request.rating,
+            request.leetcodeId,
+            request.difficulty,
+            request.domain,
+            request.url
+          )
         );
       }
 

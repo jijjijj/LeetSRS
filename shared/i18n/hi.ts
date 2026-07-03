@@ -64,6 +64,8 @@ const hi: Translations = {
     noCardsToReview: 'रिव्यु के लिए कोई कार्ड नहीं!',
     addProblemsInstructions: 'LeetCode पर प्रॉब्लम्स जोड़ें',
     addProblemsButton: "'Submit' के बगल वाले बटन से।",
+    addProblemsAlt:
+      'आप neetcode.io पर भी प्रॉब्लम्स जोड़ सकते हैं, या Cards टैब से किसी भी प्रॉब्लम को URL से जोड़ सकते हैं।',
     leetcodeCnBanner: {
       message: 'leetcode.cn यूज़ कर रहे हैं? प्रॉब्लम्स जोड़ने के लिए सपोर्ट ऑन करें।',
       enable: 'ऑन करें',
@@ -100,6 +102,20 @@ const hi: Translations = {
     noCardsAdded: 'अभी तक कोई कार्ड नहीं जोड़ा गया।',
     noCardsMatchFilter: 'कोई कार्ड आपके फ़िल्टर से मैच नहीं करता।',
     cardPausedTitle: 'कार्ड पॉज़्ड है',
+    addCard: {
+      buttonAriaLabel: 'URL से प्रॉब्लम जोड़ें',
+      title: 'URL से प्रॉब्लम जोड़ें',
+      urlLabel: 'प्रॉब्लम URL',
+      urlPlaceholder: 'https://example.com/problems/two-sum',
+      nameLabel: 'नाम',
+      namePlaceholder: 'Two Sum',
+      difficultyLabel: 'कठिनाई',
+      submit: 'जोड़ें',
+      cancel: 'रद्द करें',
+      invalidUrl: 'एक मान्य http(s) URL दर्ज करें।',
+      nameRequired: 'नाम दर्ज करें।',
+      alreadyExists: 'यह प्रॉब्लम पहले से आपके कार्ड्स में है।',
+    },
   },
   // Card stats labels
   cardStats: {
@@ -153,6 +169,12 @@ const hi: Translations = {
     leetcodeCn: {
       title: 'LeetCode चीन',
       description: 'leetcode.cn (力扣) के लिए सपोर्ट ऑन करें। अतिरिक्त ब्राउज़र अनुमति आवश्यक है।',
+      enable: 'ऑन करें',
+    },
+
+    neetcode: {
+      title: 'NeetCode',
+      description: 'neetcode.io के लिए सपोर्ट ऑन करें। अतिरिक्त ब्राउज़र अनुमति आवश्यक है।',
       enable: 'ऑन करें',
     },
     // Data section

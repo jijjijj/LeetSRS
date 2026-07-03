@@ -15,6 +15,7 @@ import type { UseQueryResult } from '@tanstack/react-query';
 vi.mock('@/hooks/useBackgroundQueries', () => ({
   useCardsQuery: vi.fn(),
   useTodayStatsQuery: vi.fn(() => ({ data: { streak: 5 } })),
+  useAddCardMutation: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),
   usePauseCardMutation: vi.fn(),
   useRemoveCardMutation: vi.fn(),
   useNoteQuery: vi.fn(() => ({ data: null, isLoading: false })),
@@ -22,7 +23,12 @@ vi.mock('@/hooks/useBackgroundQueries', () => ({
   useDeleteNoteMutation: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),
 }));
 
-import { useCardsQuery, usePauseCardMutation, useRemoveCardMutation } from '@/hooks/useBackgroundQueries';
+import {
+  useCardsQuery,
+  useAddCardMutation,
+  usePauseCardMutation,
+  useRemoveCardMutation,
+} from '@/hooks/useBackgroundQueries';
 const mockedUseCardsQuery = vi.mocked(useCardsQuery);
 
 const renderWithQueryClient = (component: React.ReactElement) => {
@@ -68,7 +74,7 @@ describe('CardView', () => {
 
     renderWithQueryClient(<CardView />);
 
-    const cardElements = screen.getAllByRole('button');
+    const cardElements = screen.getAllByRole('button', { name: /Problem/ });
     expect(within(cardElements[0]).getByText('#1')).toBeInTheDocument();
     expect(within(cardElements[0]).getByText('Problem 1')).toBeInTheDocument();
     expect(within(cardElements[1]).getByText('#42')).toBeInTheDocument();
@@ -140,7 +146,7 @@ describe('CardView', () => {
     expect(screen.queryByText('State:')).not.toBeInTheDocument();
 
     // Click to expand
-    const cardButton = screen.getByRole('button');
+    const cardButton = screen.getByRole('button', { name: /Test Problem/i });
     fireEvent.click(cardButton);
 
     // Stats should now be visible
@@ -171,7 +177,7 @@ describe('CardView', () => {
 
     renderWithQueryClient(<CardView />);
 
-    const cardButtons = screen.getAllByRole('button');
+    const cardButtons = screen.getAllByRole('button', { name: /Problem/ });
 
     // Expand first card
     fireEvent.click(cardButtons[0]);
@@ -208,7 +214,7 @@ describe('CardView', () => {
     renderWithQueryClient(<CardView />);
 
     // Expand card
-    fireEvent.click(screen.getByRole('button'));
+    fireEvent.click(screen.getByRole('button', { name: /Mock Problem/i }));
 
     // Check that the dates are present (just check that they're formatted, not exact values due to timezone)
     const addedRow = screen.getByText('Added:').parentElement;
@@ -529,7 +535,7 @@ describe('CardView', () => {
       renderWithQueryClient(<CardView />);
 
       // Expand both cards
-      const cardButtons = screen.getAllByRole('button');
+      const cardButtons = screen.getAllByRole('button', { name: /Problem/ });
       fireEvent.click(cardButtons[0]); // First card
       fireEvent.click(cardButtons[1]); // Second card
 
@@ -546,6 +552,125 @@ describe('CardView', () => {
         paused: true,
       });
       expect(mutateAsyncMock).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('non-LeetCode cards', () => {
+    it('should sort cards without a numeric id after LeetCode cards, by name', () => {
+      const cards = [
+        createMockCard(State.New, { leetcodeId: '', name: 'Zeta Custom', slug: 'custom:z' }),
+        createMockCard(State.New, { leetcodeId: '5', name: 'Problem 5', slug: 'p5' }),
+        createMockCard(State.New, { leetcodeId: '', name: 'Alpha Custom', slug: 'custom:a' }),
+        createMockCard(State.New, { leetcodeId: '2', name: 'Problem 2', slug: 'p2' }),
+      ];
+
+      mockedUseCardsQuery.mockReturnValue(createQueryMock(cards) as UseQueryResult<Card[]>);
+
+      renderWithQueryClient(<CardView />);
+
+      const cardElements = screen.getAllByRole('button', { name: /Problem|Custom/ });
+      expect(within(cardElements[0]).getByText('Problem 2')).toBeInTheDocument();
+      expect(within(cardElements[1]).getByText('Problem 5')).toBeInTheDocument();
+      expect(within(cardElements[2]).getByText('Alpha Custom')).toBeInTheDocument();
+      expect(within(cardElements[3]).getByText('Zeta Custom')).toBeInTheDocument();
+    });
+
+    it('should hide the id badge when leetcodeId is empty', () => {
+      const card = createMockCard(State.New, { leetcodeId: '', name: 'Custom Problem' });
+
+      mockedUseCardsQuery.mockReturnValue(createQueryMock([card]) as UseQueryResult<Card[]>);
+
+      renderWithQueryClient(<CardView />);
+
+      const cardButton = screen.getByRole('button', { name: /Custom Problem/i });
+      expect(within(cardButton).queryByText(/^#/)).not.toBeInTheDocument();
+    });
+  });
+
+  describe('add problem by URL', () => {
+    let addMutateAsyncMock: ReturnType<typeof vi.fn>;
+
+    beforeEach(() => {
+      addMutateAsyncMock = vi.fn().mockResolvedValue({});
+      vi.mocked(useAddCardMutation).mockReturnValue({
+        mutateAsync: addMutateAsyncMock,
+        isPending: false,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any);
+    });
+
+    const openForm = () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Add problem by URL' }));
+    };
+
+    it('should show the add button even when there are no cards', () => {
+      mockedUseCardsQuery.mockReturnValue(createQueryMock<Card[]>([]) as UseQueryResult<Card[]>);
+
+      renderWithQueryClient(<CardView />);
+
+      expect(screen.getByRole('button', { name: 'Add problem by URL' })).toBeInTheDocument();
+      expect(screen.getByText('No cards added yet.')).toBeInTheDocument();
+    });
+
+    it('should auto-suggest a name and submit with a synthesized slug', async () => {
+      mockedUseCardsQuery.mockReturnValue(createQueryMock<Card[]>([]) as UseQueryResult<Card[]>);
+
+      renderWithQueryClient(<CardView />);
+      openForm();
+
+      const urlInput = screen.getByPlaceholderText('https://example.com/problems/two-sum');
+      fireEvent.change(urlInput, { target: { value: 'https://neetcode.io/problems/duplicate-integer' } });
+
+      const nameInput = screen.getByPlaceholderText('Two Sum');
+      expect(nameInput).toHaveValue('Duplicate Integer');
+
+      fireEvent.click(screen.getByRole('button', { name: 'Add' }));
+
+      await vi.waitFor(() => {
+        expect(addMutateAsyncMock).toHaveBeenCalledWith({
+          slug: 'neetcode.io:duplicate-integer',
+          name: 'Duplicate Integer',
+          leetcodeId: '',
+          difficulty: 'Medium',
+          domain: 'neetcode.io',
+          url: 'https://neetcode.io/problems/duplicate-integer',
+        });
+      });
+    });
+
+    it('should show an error for an invalid URL and not submit', async () => {
+      mockedUseCardsQuery.mockReturnValue(createQueryMock<Card[]>([]) as UseQueryResult<Card[]>);
+
+      renderWithQueryClient(<CardView />);
+      openForm();
+
+      const urlInput = screen.getByPlaceholderText('https://example.com/problems/two-sum');
+      fireEvent.change(urlInput, { target: { value: 'not a url' } });
+
+      fireEvent.click(screen.getByRole('button', { name: 'Add' }));
+
+      expect(await screen.findByText('Enter a valid http(s) URL.')).toBeInTheDocument();
+      expect(addMutateAsyncMock).not.toHaveBeenCalled();
+    });
+
+    it('should show an error when the problem already exists', async () => {
+      const existing = createMockCard(State.New, {
+        slug: 'neetcode.io:duplicate-integer',
+        name: 'Duplicate Integer',
+        leetcodeId: '',
+      });
+      mockedUseCardsQuery.mockReturnValue(createQueryMock([existing]) as UseQueryResult<Card[]>);
+
+      renderWithQueryClient(<CardView />);
+      openForm();
+
+      const urlInput = screen.getByPlaceholderText('https://example.com/problems/two-sum');
+      fireEvent.change(urlInput, { target: { value: 'https://neetcode.io/problems/duplicate-integer/' } });
+
+      fireEvent.click(screen.getByRole('button', { name: 'Add' }));
+
+      expect(await screen.findByText('This problem is already in your cards.')).toBeInTheDocument();
+      expect(addMutateAsyncMock).not.toHaveBeenCalled();
     });
   });
 });

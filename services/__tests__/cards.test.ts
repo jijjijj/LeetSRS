@@ -263,6 +263,84 @@ describe('addCard', () => {
   });
 });
 
+describe('cards with a stored url (neetcode.io / custom)', () => {
+  beforeEach(() => {
+    fakeBrowser.reset();
+  });
+
+  it('should persist and round-trip the url through storage', async () => {
+    const card = await addCard(
+      'neetcode.io:duplicate-integer',
+      'Duplicate Integer',
+      '',
+      'Easy',
+      'neetcode.io',
+      'https://neetcode.io/problems/duplicate-integer'
+    );
+
+    expect(card.url).toBe('https://neetcode.io/problems/duplicate-integer');
+    expect(card.leetcodeId).toBe('');
+
+    const stored = await storage.getItem<Record<string, StoredCard>>(STORAGE_KEYS.cards);
+    expect(stored!['neetcode.io:duplicate-integer'].url).toBe('https://neetcode.io/problems/duplicate-integer');
+
+    const all = await getAllCards();
+    expect(all).toHaveLength(1);
+    expect(all[0].url).toBe('https://neetcode.io/problems/duplicate-integer');
+    expect(all[0].domain).toBe('neetcode.io');
+  });
+
+  it('should not store a url property for LeetCode cards', async () => {
+    await addCard('two-sum', 'Two Sum', '1', 'Easy', 'leetcode.com');
+
+    const stored = await storage.getItem<Record<string, StoredCard>>(STORAGE_KEYS.cards);
+    expect('url' in stored!['two-sum']).toBe(false);
+  });
+
+  it('should return the existing card when re-adding the same prefixed slug', async () => {
+    const first = await addCard(
+      'custom:example.com/p?id=1',
+      'Some Problem',
+      '',
+      'Medium',
+      'custom',
+      'https://example.com/p?id=1'
+    );
+    const second = await addCard(
+      'custom:example.com/p?id=1',
+      'Renamed',
+      '',
+      'Hard',
+      'custom',
+      'https://example.com/p?id=1'
+    );
+
+    expect(second.id).toBe(first.id);
+    expect(second.name).toBe('Some Problem');
+
+    const stored = await storage.getItem<Record<string, StoredCard>>(STORAGE_KEYS.cards);
+    expect(Object.keys(stored || {})).toHaveLength(1);
+  });
+
+  it('should create a card with url when rating a missing card', async () => {
+    const { card } = await rateCard(
+      'neetcode.io:two-integer-sum',
+      'Two Integer Sum',
+      Rating.Good,
+      '',
+      'Easy',
+      'neetcode.io',
+      'https://neetcode.io/problems/two-integer-sum'
+    );
+
+    expect(card.url).toBe('https://neetcode.io/problems/two-integer-sum');
+    expect(card.domain).toBe('neetcode.io');
+
+    const all = await getAllCards();
+    expect(all[0].url).toBe('https://neetcode.io/problems/two-integer-sum');
+  });
+});
+
 describe('getAllCards', () => {
   beforeEach(() => {
     // Reset the fake browser state before each test

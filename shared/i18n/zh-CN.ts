@@ -64,6 +64,7 @@ const zhCN: Translations = {
     noCardsToReview: '没有需要复习的卡片！',
     addProblemsInstructions: '在 LeetCode 上使用',
     addProblemsButton: '「提交」旁边的按钮添加题目。',
+    addProblemsAlt: '您也可以在 neetcode.io 上添加题目，或在「卡片」标签页通过 URL 添加任意题目。',
     leetcodeCnBanner: {
       message: '使用力扣中国站？启用支持以添加题目。',
       enable: '启用',
@@ -100,6 +101,20 @@ const zhCN: Translations = {
     noCardsAdded: '还没有添加卡片。',
     noCardsMatchFilter: '没有匹配的卡片。',
     cardPausedTitle: '卡片已暂停',
+    addCard: {
+      buttonAriaLabel: '通过 URL 添加题目',
+      title: '通过 URL 添加题目',
+      urlLabel: '题目 URL',
+      urlPlaceholder: 'https://example.com/problems/two-sum',
+      nameLabel: '名称',
+      namePlaceholder: 'Two Sum',
+      difficultyLabel: '难度',
+      submit: '添加',
+      cancel: '取消',
+      invalidUrl: '请输入有效的 http(s) URL。',
+      nameRequired: '请输入名称。',
+      alreadyExists: '该题目已在您的卡片中。',
+    },
   },
 
   cardStats: {
@@ -154,6 +169,12 @@ const zhCN: Translations = {
     leetcodeCn: {
       title: '力扣中国',
       description: '启用 leetcode.cn（力扣）支持。需要额外的浏览器权限。',
+      enable: '启用',
+    },
+
+    neetcode: {
+      title: 'NeetCode',
+      description: '启用 neetcode.io 支持。需要额外的浏览器权限。',
       enable: '启用',
     },
 

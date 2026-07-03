@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { ViewLayout } from '../../components/ViewLayout';
 import { StreakCounter } from '../../components/StreakCounter';
 import { CardNotes } from './components/CardNotes';
+import { AddCardForm } from './components/AddCardForm';
 import { useCardsQuery, usePauseCardMutation, useRemoveCardMutation } from '@/hooks/useBackgroundQueries';
 import { Button, TextField, Input, Label } from 'react-aria-components';
 import { State as FsrsState } from 'ts-fsrs';
 import type { Card } from '@/shared/cards';
-import { FaCirclePause, FaPlay, FaTrash, FaXmark, FaMagnifyingGlass } from 'react-icons/fa6';
+import { FaCirclePause, FaPlay, FaTrash, FaXmark, FaMagnifyingGlass, FaPlus } from 'react-icons/fa6';
 import { bounceButton } from '@/shared/styles';
 import { useI18n } from '../../contexts/I18nContext';
 import type { Translations } from '@/shared/i18n';
@@ -60,7 +61,7 @@ function CardHeader({ card, isExpanded, t }: CardHeaderProps) {
     <>
       <div className="flex items-center gap-2">
         {card.paused && <FaCirclePause className="text-warning text-base" title={t.cardsView.cardPausedTitle} />}
-        <span className="text-xs text-secondary">{t.format.leetcodeId(card.leetcodeId)}</span>
+        {card.leetcodeId && <span className="text-xs text-secondary">{t.format.leetcodeId(card.leetcodeId)}</span>}
         <span className={`text-sm ${card.paused ? 'opacity-60' : ''}`}>{card.name}</span>
       </div>
       <div className="flex items-center gap-2">
@@ -211,6 +212,7 @@ export function CardView() {
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
   const [processingCards, setProcessingCards] = useState<Set<string>>(new Set());
   const [filterText, setFilterText] = useState('');
+  const [showAddForm, setShowAddForm] = useState(false);
 
   const filteredCards = cards.filter((card) => {
     if (!filterText) return true;
@@ -221,6 +223,10 @@ export function CardView() {
   const sortedCards = [...filteredCards].sort((a, b) => {
     const aId = parseInt(a.leetcodeId);
     const bId = parseInt(b.leetcodeId);
+    // Cards without a numeric id (NeetCode/custom) sort after LeetCode cards, by name
+    if (Number.isNaN(aId) && Number.isNaN(bId)) return a.name.localeCompare(b.name);
+    if (Number.isNaN(aId)) return 1;
+    if (Number.isNaN(bId)) return -1;
     return aId - bId;
   });
 
@@ -275,26 +281,41 @@ export function CardView() {
   return (
     <ViewLayout title={t.cardsView.title} headerContent={<StreakCounter />}>
       <div className="flex flex-col gap-4">
-        {!isLoading && cards.length > 0 && (
-          <TextField className="relative" value={filterText} onChange={setFilterText}>
-            <Label className="sr-only">{t.cardsView.filterAriaLabel}</Label>
-            <div className="relative">
-              <FaMagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary text-sm" />
-              <Input
-                className="w-full pl-9 pr-9 py-2 bg-secondary rounded-lg border border-current text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-                placeholder={t.cardsView.filterPlaceholder}
-              />
-              {filterText && (
-                <Button
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-tertiary transition-colors"
-                  onPress={() => setFilterText('')}
-                  aria-label={t.cardsView.clearFilterAriaLabel}
-                >
-                  <FaXmark className="text-secondary text-sm" />
-                </Button>
-              )}
-            </div>
-          </TextField>
+        {!isLoading && (
+          <div className="flex items-start gap-2">
+            {cards.length > 0 && (
+              <TextField className="relative flex-1" value={filterText} onChange={setFilterText}>
+                <Label className="sr-only">{t.cardsView.filterAriaLabel}</Label>
+                <div className="relative">
+                  <FaMagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary text-sm" />
+                  <Input
+                    className="w-full pl-9 pr-9 py-2 bg-secondary rounded-lg border border-current text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+                    placeholder={t.cardsView.filterPlaceholder}
+                  />
+                  {filterText && (
+                    <Button
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-tertiary transition-colors"
+                      onPress={() => setFilterText('')}
+                      aria-label={t.cardsView.clearFilterAriaLabel}
+                    >
+                      <FaXmark className="text-secondary text-sm" />
+                    </Button>
+                  )}
+                </div>
+              </TextField>
+            )}
+            <Button
+              className={`p-2.5 rounded-lg bg-secondary border border-current hover:bg-tertiary transition-colors ${cards.length === 0 ? 'ml-auto' : ''}`}
+              onPress={() => setShowAddForm((prev) => !prev)}
+              aria-label={t.cardsView.addCard.buttonAriaLabel}
+            >
+              <FaPlus className="text-secondary text-sm" />
+            </Button>
+          </div>
+        )}
+
+        {showAddForm && (
+          <AddCardForm existingSlugs={new Set(cards.map((c) => c.slug))} onDone={() => setShowAddForm(false)} />
         )}
 
         {isLoading ? (

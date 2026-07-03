@@ -12,9 +12,8 @@ export function getThemeColor(lightColor: string, darkColor: string): string {
   return isDarkMode() ? darkColor : lightColor;
 }
 
-export function getRatingColor(colorClass: keyof typeof RATING_COLORS) {
+export function getRatingColor(colorClass: keyof typeof RATING_COLORS, isDark: boolean = isDarkMode()) {
   const colors = RATING_COLORS[colorClass];
-  const isDark = isDarkMode();
   return {
     bg: isDark ? colors.darkBg : colors.bg,
     hover: isDark ? colors.darkHover : colors.hover,

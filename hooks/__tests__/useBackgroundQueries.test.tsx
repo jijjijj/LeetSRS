@@ -4,6 +4,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import {
+  useAddCardMutation,
   useRateCardMutation,
   useSaveNoteMutation,
   useDeleteNoteMutation,
@@ -26,6 +27,7 @@ vi.mock('@/shared/messages', () => ({
     return Promise.resolve();
   }),
   MessageType: {
+    ADD_CARD: 'ADD_CARD',
     RATE_CARD: 'RATE_CARD',
     SAVE_NOTE: 'SAVE_NOTE',
     DELETE_NOTE: 'DELETE_NOTE',
@@ -86,6 +88,71 @@ describe('useRateCardMutation', () => {
         leetcodeId: '1',
         difficulty: 'Easy',
         domain: 'leetcode.com',
+      });
+    });
+  });
+
+  it('should pass url through for cards that carry one', async () => {
+    vi.mocked(sendMessage).mockResolvedValue(undefined);
+
+    const { result } = renderHook(() => useRateCardMutation(), {
+      wrapper: createWrapper(),
+    });
+
+    result.current.mutate({
+      slug: 'neetcode.io:duplicate-integer',
+      name: 'Duplicate Integer',
+      rating: Rating.Good as Grade,
+      leetcodeId: '',
+      difficulty: 'Easy',
+      domain: 'neetcode.io',
+      url: 'https://neetcode.io/problems/duplicate-integer',
+    });
+
+    await waitFor(() => {
+      expect(sendMessage).toHaveBeenCalledWith({
+        type: MessageType.RATE_CARD,
+        slug: 'neetcode.io:duplicate-integer',
+        name: 'Duplicate Integer',
+        rating: Rating.Good,
+        leetcodeId: '',
+        difficulty: 'Easy',
+        domain: 'neetcode.io',
+        url: 'https://neetcode.io/problems/duplicate-integer',
+      });
+    });
+  });
+});
+
+describe('useAddCardMutation', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(sendMessage).mockResolvedValue(undefined);
+  });
+
+  it('should pass url through in the ADD_CARD payload', async () => {
+    const { result } = renderHook(() => useAddCardMutation(), {
+      wrapper: createWrapper(),
+    });
+
+    result.current.mutate({
+      slug: 'custom:example.com/some-problem',
+      name: 'Some Problem',
+      leetcodeId: '',
+      difficulty: 'Medium',
+      domain: 'custom',
+      url: 'https://example.com/some-problem',
+    });
+
+    await waitFor(() => {
+      expect(sendMessage).toHaveBeenCalledWith({
+        type: MessageType.ADD_CARD,
+        slug: 'custom:example.com/some-problem',
+        name: 'Some Problem',
+        leetcodeId: '',
+        difficulty: 'Medium',
+        domain: 'custom',
+        url: 'https://example.com/some-problem',
       });
     });
   });

@@ -79,6 +79,7 @@ export function ReviewQueue() {
           leetcodeId: currentCard.leetcodeId,
           difficulty: currentCard.difficulty,
           domain: currentCard.domain,
+          url: currentCard.url,
         }),
       {
         getSlideDirection: (result) => (result.shouldRequeue ? 'left' : 'right'),
@@ -156,6 +157,7 @@ export function ReviewQueue() {
           </svg>
           {t.home.addProblemsButton}
         </div>
+        <div className="text-sm text-secondary text-center">{t.home.addProblemsAlt}</div>
       </div>
     );
   }

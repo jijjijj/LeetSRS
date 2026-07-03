@@ -12,7 +12,7 @@ import { createTestWrapper } from '@/test/utils/test-wrapper';
 
 describe('ReviewCard', () => {
   const mockOnRate = vi.fn();
-  const mockCard: Pick<Card, 'slug' | 'leetcodeId' | 'name' | 'difficulty' | 'domain'> = {
+  const mockCard: Pick<Card, 'slug' | 'leetcodeId' | 'name' | 'difficulty' | 'domain' | 'url'> = {
     slug: 'two-sum',
     leetcodeId: '1',
     name: 'Two Sum',
@@ -70,10 +70,27 @@ describe('ReviewCard', () => {
 
     it('should render the external link to LeetCode problem', () => {
       renderWithProviders();
-      const link = screen.getByRole('link', { name: /LeetCode/i });
+      const link = screen.getByRole('link', { name: /Two Sum/i });
       expect(link).toHaveAttribute('href', 'https://leetcode.com/problems/two-sum/description/');
       expect(link).toHaveAttribute('target', '_blank');
       expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+    });
+
+    it('should link to the stored url for cards with one', () => {
+      renderWithProviders({
+        ...mockCard,
+        slug: 'neetcode.io:duplicate-integer',
+        name: 'Duplicate Integer',
+        domain: 'neetcode.io',
+        url: 'https://neetcode.io/problems/duplicate-integer',
+      });
+      const link = screen.getByRole('link', { name: /Duplicate Integer/i });
+      expect(link).toHaveAttribute('href', 'https://neetcode.io/problems/duplicate-integer');
+    });
+
+    it('should hide the problem ID when empty', () => {
+      renderWithProviders({ ...mockCard, leetcodeId: '' });
+      expect(screen.queryByText(/^#/)).not.toBeInTheDocument();
     });
 
     it('should render all four rating buttons', () => {
@@ -188,7 +205,7 @@ describe('ReviewCard', () => {
       };
       renderWithProviders(specialCard);
 
-      const link = screen.getByRole('link', { name: /LeetCode/i });
+      const link = screen.getByRole('link', { name: /Two Sum/i });
       expect(link).toHaveAttribute('href', 'https://leetcode.com/problems/problem-with-special_chars-123/description/');
     });
   });
@@ -205,7 +222,7 @@ describe('ReviewCard', () => {
 
     it('should have accessible link with proper attributes', () => {
       renderWithProviders();
-      const link = screen.getByRole('link', { name: /LeetCode/i });
+      const link = screen.getByRole('link', { name: /Two Sum/i });
 
       expect(link).toHaveAttribute('target', '_blank');
       expect(link).toHaveAttribute('rel', 'noopener noreferrer');
