@@ -318,6 +318,14 @@ export function CardView() {
           <AddCardForm existingSlugs={new Set(cards.map((c) => c.slug))} onDone={() => setShowAddForm(false)} />
         )}
 
+        {!isLoading && cards.length > 0 && (
+          <div className="text-xs text-secondary">
+            {filterText
+              ? t.format.filteredProblemCount(filteredCards.length, cards.length)
+              : t.format.problemCount(cards.length)}
+          </div>
+        )}
+
         {isLoading ? (
           <p className="text-secondary">{t.cardsView.loadingCards}</p>
         ) : cards.length === 0 ? (

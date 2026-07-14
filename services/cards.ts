@@ -12,7 +12,16 @@ import { updateStats, getTodayStats } from './stats';
 import { deleteNote } from './notes';
 import { type Card, type CardDomain, type Difficulty } from '@/shared/cards';
 import { getMaxNewCardsPerDay, getDayStartHour } from './settings';
-const params = generatorParameters({ maximum_interval: 1000 });
+// Day-granularity learning steps instead of ts-fsrs's sub-day defaults:
+// re-attempting a problem minutes after solving it is pointless. First ratings
+// give Again/Hard/Good = 1/2/3 days (Hard is the midpoint of the two steps);
+// Easy skips the steps and graduates straight to FSRS's ~8-day interval.
+// Lapsed review cards come back in 1 day rather than 10 minutes.
+const params = generatorParameters({
+  maximum_interval: 1000,
+  learning_steps: ['1d', '3d'],
+  relearning_steps: ['1d'],
+});
 const fsrs = new FSRS(params);
 
 // Format date as YYYY-MM-DD in local timezone for comparison

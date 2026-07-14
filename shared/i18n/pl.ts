@@ -275,6 +275,14 @@ const pl: Translations = {
     stabilityDays: (days: string) => `${days}d`,
     characterCount: (count: number, max: number) => `${count}/${max}`,
     version: (version: string) => `v${version}`,
+    problemCount: (count: number) => {
+      if (count === 1) return '1 zadanie';
+      const mod10 = count % 10;
+      const mod100 = count % 100;
+      if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return `${count} zadania`;
+      return `${count} zadań`;
+    },
+    filteredProblemCount: (shown: number, total: number) => `${shown} z ${total} zadań`,
   },
 } as const;
 

@@ -245,6 +245,8 @@ const zhCN: Translations = {
     stabilityDays: (days: string) => `${days}天`,
     characterCount: (count: number, max: number) => `${count}/${max}`,
     version: (version: string) => `v${version}`,
+    problemCount: (count: number) => `共 ${count} 道题`,
+    filteredProblemCount: (shown: number, total: number) => `${shown} / ${total} 道题`,
   },
 } as const;
 

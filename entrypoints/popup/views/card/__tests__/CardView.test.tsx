@@ -587,6 +587,47 @@ describe('CardView', () => {
     });
   });
 
+  describe('problem count', () => {
+    it('should show the total problem count', () => {
+      const cards = [
+        createMockCard(State.New, { name: 'Problem 1', leetcodeId: '1', slug: 'p1' }),
+        createMockCard(State.New, { name: 'Problem 2', leetcodeId: '2', slug: 'p2' }),
+        createMockCard(State.New, { name: 'Problem 3', leetcodeId: '3', slug: 'p3' }),
+      ];
+
+      mockedUseCardsQuery.mockReturnValue(createQueryMock(cards) as UseQueryResult<Card[]>);
+
+      renderWithQueryClient(<CardView />);
+
+      expect(screen.getByText('3 problems')).toBeInTheDocument();
+    });
+
+    it('should show filtered count out of total when filtering', () => {
+      const cards = [
+        createMockCard(State.New, { name: 'Two Sum', leetcodeId: '1', slug: 'p1' }),
+        createMockCard(State.New, { name: 'Add Two Numbers', leetcodeId: '2', slug: 'p2' }),
+        createMockCard(State.New, { name: 'Longest Substring', leetcodeId: '3', slug: 'p3' }),
+      ];
+
+      mockedUseCardsQuery.mockReturnValue(createQueryMock(cards) as UseQueryResult<Card[]>);
+
+      renderWithQueryClient(<CardView />);
+
+      const filterInput = screen.getByPlaceholderText('Filter by name or ID...');
+      fireEvent.change(filterInput, { target: { value: 'two' } });
+
+      expect(screen.getByText('2 of 3 problems')).toBeInTheDocument();
+    });
+
+    it('should not show a count when there are no cards', () => {
+      mockedUseCardsQuery.mockReturnValue(createQueryMock<Card[]>([]) as UseQueryResult<Card[]>);
+
+      renderWithQueryClient(<CardView />);
+
+      expect(screen.queryByText(/0 problems/)).not.toBeInTheDocument();
+    });
+  });
+
   describe('add problem by URL', () => {
     let addMutateAsyncMock: ReturnType<typeof vi.fn>;
 

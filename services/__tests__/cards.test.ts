@@ -875,20 +875,17 @@ describe('rateCard', () => {
     expect(todayStats?.gradeBreakdown[Rating.Good]).toBe(1);
   });
 
-  it('should return shouldRequeue based on whether card is still due today', async () => {
-    // Test with Rating.Again - card should still be due today
+  it('should not requeue rated cards since scheduling is day-granular', async () => {
+    // Without sub-day learning steps, every rating schedules the card for at
+    // least the next day, so it never re-enters today's queue
     const againResult = await rateCard('test-again', 'Test Again', Rating.Again, '2001', 'Easy', 'leetcode.com');
-    expect(againResult.shouldRequeue).toBe(true); // Again typically schedules for same day
+    expect(againResult.shouldRequeue).toBe(false);
 
-    // Test with Rating.Good on a new card - might schedule for tomorrow
     const goodResult = await rateCard('test-good', 'Test Good', Rating.Good, '2002', 'Medium', 'leetcode.com');
-    // New cards rated Good typically get scheduled for the next day or later
-    // The exact value depends on FSRS algorithm, but we can verify the field exists
-    expect(typeof goodResult.shouldRequeue).toBe('boolean');
+    expect(goodResult.shouldRequeue).toBe(false);
 
-    // Test with Rating.Hard - often keeps cards due today
     const hardResult = await rateCard('test-hard', 'Test Hard', Rating.Hard, '2003', 'Hard', 'leetcode.com');
-    expect(typeof hardResult.shouldRequeue).toBe('boolean');
+    expect(hardResult.shouldRequeue).toBe(false);
   });
 
   it('should update stats correctly for review cards vs new cards', async () => {
@@ -1326,9 +1323,9 @@ describe('getReviewQueue', () => {
 
     // Set due times to various times today
     const cards = await storage.getItem<Record<string, StoredCard>>(STORAGE_KEYS.cards);
-    cards!['morning'].fsrs.due = new Date('2024-01-15T06:00:00Z').getTime(); // 6 AM today
-    cards!['evening'].fsrs.due = new Date('2024-01-15T20:00:00Z').getTime(); // 8 PM today
-    cards!['midnight'].fsrs.due = new Date('2024-01-15T23:59:59Z').getTime(); // End of today
+    cards!['morning'].fsrs.due = new Date('2024-01-15T06:00:00').getTime(); // 6 AM today
+    cards!['evening'].fsrs.due = new Date('2024-01-15T20:00:00').getTime(); // 8 PM today
+    cards!['midnight'].fsrs.due = new Date('2024-01-15T23:59:59').getTime(); // End of today
     await storage.setItem(STORAGE_KEYS.cards, cards);
 
     const queue = await getReviewQueue();
@@ -1625,22 +1622,21 @@ describe('getReviewQueue', () => {
     expect(queue1.length).toBe(3); // Limited by max new cards per day
   });
 
-  it('should place cards rated "Again" at the back of the queue', async () => {
+  it('should remove cards rated "Again" from today\'s queue', async () => {
     // Create cards
     await addCard('first-card', 'First Card', '1001', 'Easy', 'leetcode.com');
     await addCard('second-card', 'Second Card', '1002', 'Medium', 'leetcode.com');
     await addCard('third-card', 'Third Card', '1003', 'Hard', 'leetcode.com');
 
-    // Rate first card as "Again" - it should get a due date later today
+    // Rate first card as "Again" - without sub-day learning steps it is
+    // scheduled for a future day and leaves today's queue
     await rateCard('first-card', 'First Card', Rating.Again, '1001', 'Easy', 'leetcode.com');
 
-    const queue = await getReviewQueue();
+    const rated = (await getAllCards()).find((c) => c.slug === 'first-card')!;
+    expect(isDueByDate(rated)).toBe(false);
 
-    // First card should now be at the end (due later today)
-    const slugs = queue.map((c) => c.slug);
-    expect(slugs[0]).toBe('second-card');
-    expect(slugs[1]).toBe('third-card');
-    expect(slugs[2]).toBe('first-card');
+    const queue = await getReviewQueue();
+    expect(queue.map((c) => c.slug)).toEqual(['second-card', 'third-card']);
   });
 
   it('should select the same new cards consistently when limit applies', async () => {
@@ -1691,7 +1687,7 @@ describe('getReviewQueue', () => {
     expect(queue[2].slug).toBe('new-late');
   });
 
-  it('should handle cards rated "Hard" moving to later in the day', async () => {
+  it('should remove cards rated "Hard" from today\'s queue', async () => {
     // Set time to morning
     vi.setSystemTime(new Date('2024-01-15T09:00:00'));
 
@@ -1704,17 +1700,11 @@ describe('getReviewQueue', () => {
     const initialQueue = await getReviewQueue();
     expect(initialQueue[0].slug).toBe('card-1');
 
-    // Rate first card as "Hard" - should move to later today
+    // Rate first card as "Hard" - scheduled for a future day, not later today
     await rateCard('card-1', 'Card 1', Rating.Hard, '1001', 'Easy', 'leetcode.com');
 
-    // Get queue again
     const updatedQueue = await getReviewQueue();
-
-    // Card-1 should now be at the end (due later)
-    const slugs = updatedQueue.map((c) => c.slug);
-    expect(slugs[0]).toBe('card-2');
-    expect(slugs[1]).toBe('card-3');
-    expect(slugs[2]).toBe('card-1'); // Moved to end
+    expect(updatedQueue.map((c) => c.slug)).toEqual(['card-2', 'card-3']);
   });
 
   it('should handle dynamic changes to max new cards setting', async () => {
@@ -1829,9 +1819,14 @@ describe('getReviewQueue', () => {
     await addCard('new3', 'New 3', '1003', 'Hard', 'leetcode.com');
     await addCard('new4', 'New 4', '1004', 'Easy', 'leetcode.com');
 
-    // Create review cards (rate them to make them due)
+    // Create review cards (rate them, then pull their due dates back to today
+    // since rating schedules them for future days)
     await rateCard('review1', 'Review 1', Rating.Again, '2001', 'Easy', 'leetcode.com');
     await rateCard('review2', 'Review 2', Rating.Hard, '2002', 'Medium', 'leetcode.com');
+    const stored = await storage.getItem<Record<string, StoredCard>>(STORAGE_KEYS.cards);
+    stored!['review1'].fsrs.due = today.getTime();
+    stored!['review2'].fsrs.due = today.getTime();
+    await storage.setItem(STORAGE_KEYS.cards, stored);
 
     // Pause some cards
     await setPauseStatus('new2', true); // Pause a new card

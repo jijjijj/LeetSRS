@@ -273,6 +273,8 @@ const en = {
     stabilityDays: (days: string) => `${days}d`,
     characterCount: (count: number, max: number) => `${count}/${max}`,
     version: (version: string) => `v${version}`,
+    problemCount: (count: number) => (count === 1 ? '1 problem' : `${count} problems`),
+    filteredProblemCount: (shown: number, total: number) => `${shown} of ${total} problems`,
   },
 } as const;
 

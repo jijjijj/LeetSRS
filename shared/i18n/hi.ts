@@ -251,6 +251,8 @@ const hi: Translations = {
     stabilityDays: (days: string) => `${days}दि`,
     characterCount: (count: number, max: number) => `${count}/${max}`,
     version: (version: string) => `v${version}`,
+    problemCount: (count: number) => (count === 1 ? '1 प्रॉब्लम' : `${count} प्रॉब्लम्स`),
+    filteredProblemCount: (shown: number, total: number) => `${total} में से ${shown} प्रॉब्लम्स`,
   },
 } as const;
 
